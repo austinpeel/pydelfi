@@ -5,22 +5,22 @@ import os
 from tqdm.auto import tqdm
 
 class ConditionalTrainer():
-    
-    def __init__(self, model, optimizer=tf.train.AdamOptimizer, optimizer_arguments={}):
+
+    def __init__(self, model, optimizer=tf.compat.v1.train.AdamOptimizer, optimizer_arguments={}):
         """
             Constructor that defines the training operation.
             :param model: made/maf instance to be trained.
             :param optimizer: tensorflow optimizer class to be used during training.
             :param optimizer_arguments: dictionary of arguments for optimizer intialization.
             """
-        
+
         self.model = model
         self.train_optimizer = optimizer(**optimizer_arguments).minimize(self.model.trn_loss)
         self.train_reg_optimizer = optimizer(**optimizer_arguments).minimize(self.model.reg_loss)
 
     """
     Training class for the conditional MADEs/MAFs classes using a tensorflow optimizer.
-    """           
+    """
     def train(self, sess, train_data, validation_split = 0.1, epochs=1000, batch_size=100,
               patience=20, saver_name='tmp_model', progress_bar=True, mode='samples'):
         """
@@ -35,14 +35,14 @@ class ConditionalTrainer():
         :param saver_name: string of name (with or without folder) where model is saved. If none is given,
             a temporal model is used to save and restore best model, and removed afterwards.
         """
-        
+
         # Training data
         if mode == 'samples':
             train_data_X, train_data_Y  = train_data
         elif mode == 'regression':
             train_data_X, train_data_Y, train_data_PDF  = train_data
         train_idx = np.arange(train_data_X.shape[0])
-        
+
         # validation data using p_val percent of the data
         rng.shuffle(train_idx)
         N = train_data_X.shape[0]
@@ -59,11 +59,11 @@ class ConditionalTrainer():
         bst_loss = np.infty
         early_stopping_count = 0
         saver = tf.train.Saver()
-        
+
         # Validation and training losses
         validation_losses = []
         training_losses = []
-        
+
         # Main training loop
         if progress_bar:
             pbar = tqdm(total = epochs, desc = "Training")
@@ -100,7 +100,7 @@ class ConditionalTrainer():
                 pbar.set_postfix(ordered_dict={"train loss":train_loss, "val loss":val_loss}, refresh=True)
             validation_losses.append(val_loss)
             training_losses.append(train_loss)
-                
+
             if val_loss < bst_loss:
                 bst_loss = val_loss
                 if saver_name is not None:
